@@ -7,28 +7,12 @@
 <meta name="description" content="Guardanapeiro modular para bares, lanchonetes e restaurantes. Suporte para QR Code do cardápio digital, sachês e palitos. Personalize em 3D e peça seu orçamento.">
 <link rel="stylesheet" href="css/estilo.css">
 <script src="https://cdn.tailwindcss.com"></script>
-<!-- Three.js: usa a cópia local (npm install / vendor/) e, se não existir, cai no CDN -->
-<script>
-(function () {
-  var LOCAL = 'vendor/three/build/three.module.js';
-  var CDN   = 'https://unpkg.com/three@0.160.0/';
-  var imports;
-  try {
-    var xhr = new XMLHttpRequest();
-    xhr.open('HEAD', LOCAL, false);   // síncrono de propósito: garante a ordem antes do módulo
-    xhr.send(null);
-    imports = (xhr.status >= 200 && xhr.status < 400)
-      ? { 'three': LOCAL, 'three/addons/': 'vendor/three/examples/jsm/' }
-      : { 'three': CDN + 'build/three.module.js', 'three/addons/': CDN + 'examples/jsm/' };
-  } catch (e) {
-    imports = { 'three': CDN + 'build/three.module.js', 'three/addons/': CDN + 'examples/jsm/' };
-  }
-  var im = document.createElement('script');
-  im.type = 'importmap';
-  im.textContent = JSON.stringify({ imports: imports });
-  document.head.appendChild(im);
-  window.__THREE_FONTE__ = imports.three.indexOf('http') === 0 ? 'CDN' : 'local';
-})();
+<!-- Three.js: cópia própria versionada em public/vendor/three (não depende de CDN nem de node_modules em runtime) -->
+<script type="importmap">
+{ "imports": {
+    "three": "./vendor/three/build/three.module.js",
+    "three/addons/": "./vendor/three/examples/jsm/"
+} }
 </script>
 </head>
 <body>
