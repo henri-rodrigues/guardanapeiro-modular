@@ -4,3 +4,5 @@ __pycache__/
 Thumbs.db
 node_modules/
 package-lock.json
+.claude/scheduled_tasks.lock
+cad/catalog_assets/
