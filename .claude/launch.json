@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "guardanapeiro-site",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start", "--prefix", "site-3d"],
+      "port": 3000
+    }
+  ]
+}

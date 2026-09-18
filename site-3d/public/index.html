@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guardanapeiro Modular Organizador | Personalize em 3D</title>
+<meta name="description" content="Guardanapeiro modular para bares, lanchonetes e restaurantes. Suporte para QR Code do cardápio digital, sachês e palitos. Personalize em 3D e peça seu orçamento.">
+<link rel="stylesheet" href="css/estilo.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Three.js: usa a cópia local (npm install / vendor/) e, se não existir, cai no CDN -->
+<script>
+(function () {
+  var LOCAL = 'vendor/three/build/three.module.js';
+  var CDN   = 'https://unpkg.com/three@0.160.0/';
+  var imports;
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('HEAD', LOCAL, false);   // síncrono de propósito: garante a ordem antes do módulo
+    xhr.send(null);
+    imports = (xhr.status >= 200 && xhr.status < 400)
+      ? { 'three': LOCAL, 'three/addons/': 'vendor/three/examples/jsm/' }
+      : { 'three': CDN + 'build/three.module.js', 'three/addons/': CDN + 'examples/jsm/' };
+  } catch (e) {
+    imports = { 'three': CDN + 'build/three.module.js', 'three/addons/': CDN + 'examples/jsm/' };
+  }
+  var im = document.createElement('script');
+  im.type = 'importmap';
+  im.textContent = JSON.stringify({ imports: imports });
+  document.head.appendChild(im);
+  window.__THREE_FONTE__ = imports.three.indexOf('http') === 0 ? 'CDN' : 'local';
+})();
+</script>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="topo">
+  <div class="container">
+    <div class="marca"><span class="ponto"></span> Guardanapeiro Modular</div>
+    <nav class="nav">
+      <a href="#configurador">Personalizar</a>
+      <a href="#beneficios">Benefícios</a>
+      <a href="#orcamento">Orçamento</a>
+    </nav>
+    <a href="#configurador" class="btn btn-primario" style="padding:10px 18px;font-size:14px">Personalizar Agora</a>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<div class="hero">
+  <div class="container hero-grid">
+    <div>
+      <span class="tag">Para bares, lanchonetes e restaurantes</span>
+      <h1>Organize as mesas do seu restaurante com um guardanapeiro <em>moderno e 100% customizável</em></h1>
+      <p class="sub">
+        Guardanapos, sachês e palitos sempre no lugar — e o cardápio digital à vista, com suporte
+        para QR Code. Sistema modular: você escolhe os encaixes que fazem sentido para a sua operação
+        e monta tudo sem ferramenta, só pressionando.
+      </p>
+      <div class="cta-row">
+        <a href="#configurador" class="btn btn-primario">Personalizar Agora</a>
+        <a href="#orcamento" class="btn btn-secundario">Pedir orçamento</a>
+      </div>
+      <div class="hero-stats">
+        <div><b>3</b> módulos de encaixe</div>
+        <div><b>5</b> cores disponíveis</div>
+        <div><b>+ logo</b> e número da mesa</div>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div>
+        <div style="font-size:52px;line-height:1">🍽️</div>
+        <p style="color:var(--txt2);margin-top:14px;font-size:14px">
+          Visualize o produto em 3D, gire 360°, troque cores e módulos<br>
+          e receba o orçamento no WhatsApp com a sua configuração.
+        </p>
+        <a href="#configurador" class="btn btn-secundario" style="margin-top:16px">Ver em 3D ↓</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CONFIGURADOR 3D ============ -->
+<section id="configurador">
+  <div class="container">
+    <h2 class="sec-titulo">Monte o seu em tempo real</h2>
+    <p class="sec-sub">Clique e arraste para girar, use a rolagem para aproximar. Os módulos aparecem
+      encaixados na hora — exatamente como o produto sai da impressão.</p>
+
+    <div class="config">
+      <!-- palco 3D -->
+      <div class="palco">
+        <div class="palco-topo">
+          <button id="btn-girar" class="chip" aria-pressed="true">⏸ Parar rotação</button>
+          <button id="btn-reset" class="chip">⤢ Reenquadrar</button>
+        </div>
+        <div id="carregando">
+          <div>
+            <div class="spin"></div>
+            <p style="font-size:13px;color:var(--txt2)">Carregando modelos 3D…</p>
+          </div>
+        </div>
+        <canvas id="canvas3d"></canvas>
+        <div class="dica">Arraste para girar · rolagem para zoom · botão direito para mover</div>
+      </div>
+
+      <!-- painel -->
+      <aside class="painel">
+        <div>
+          <h3>Módulos de encaixe</h3>
+          <div id="lista-modulos"></div>
+        </div>
+
+        <div>
+          <h3>Cor do produto</h3>
+          <div class="cores" id="lista-cores"></div>
+          <p style="font-size:12.5px;color:var(--txt2);margin:10px 0 0">
+            Selecionada: <b id="cor-nome" style="color:var(--txt)">Preto fosco</b>
+          </p>
+        </div>
+
+        <div>
+          <h3>Número da mesa</h3>
+          <div class="mesa">
+            <span class="mesa-num" id="mesa-num">01</span>
+            <button id="btn-mesa" class="chip">🎲 Sortear outro</button>
+          </div>
+          <p style="font-size:11.5px;color:var(--txt2);opacity:.75;margin:9px 0 0">
+            Vai aplicado no fundo da peça, junto da logo. O número é só uma demonstração —
+            na produção cada peça sai com o número da sua mesa.
+          </p>
+        </div>
+
+        <div>
+          <h3>Logo do estabelecimento</h3>
+          <div class="upload">
+            <label class="file-label" for="input-logo">📎 Enviar logo (PNG/JPG)</label>
+            <input type="file" id="input-logo" accept="image/*" class="hidden">
+            <button id="btn-remover-logo" class="chip hidden">Remover</button>
+          </div>
+          <p style="font-size:12px;color:var(--txt2);margin:9px 0 0" id="logo-nome">Nenhuma imagem enviada</p>
+          <p style="font-size:11.5px;color:var(--txt2);opacity:.75;margin:5px 0 0" id="logo-tema">
+            Ao enviar a logo, o configurador escolhe sozinho as cores e o estilo da arte.
+          </p>
+        </div>
+
+        <div class="resumo">
+          <div><span>Cor</span><b id="resumo-cor">—</b></div>
+          <div><span>Módulos</span><b id="resumo-modulos">—</b></div>
+          <div><span>Mesa</span><b id="resumo-mesa">—</b></div>
+          <div><span>Com logo</span><b id="resumo-logo">—</b></div>
+        </div>
+
+        <a id="link-whatsapp" class="btn btn-wa" href="#" target="_blank" rel="noopener">
+          💬 Solicitar Orçamento via WhatsApp
+        </a>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BENEFÍCIOS ============ -->
+<section id="beneficios">
+  <div class="container">
+    <h2 class="sec-titulo">Por que o seu salão precisa dele</h2>
+    <p class="sec-sub">Pensado para o dia a dia de operação: resistente, fácil de limpar e pronto para o cardápio digital.</p>
+    <div class="cards">
+      <div class="card">
+        <div class="ico">🛡️</div>
+        <h4>Durabilidade</h4>
+        <p>Paredes externas de 3 mm em PLA ou PETG, que aguentam o uso pesado do salão e a limpeza diária.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🧩</div>
+        <h4>Organização para mesas</h4>
+        <p>Compartimentos separados para guardanapos, sachês de molho e palitos — tudo à mão do cliente.</p>
+      </div>
+      <div class="card">
+        <div class="ico">📱</div>
+        <h4>Cardápio digital (QR Code)</h4>
+        <p>Placa removível de 76 × 140 mm, inclinada a 12°, na altura do olhar de quem está sentado.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🔧</div>
+        <h4>Design modulável</h4>
+        <p>Encaixe por botão de pressão: adicione módulos quando precisar e, sem eles, a lateral fica lisa.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA / ORÇAMENTO ============ -->
+<section id="orcamento">
+  <div class="container">
+    <div class="cta-final">
+      <h2 class="sec-titulo" style="margin-bottom:10px">Peça o seu orçamento agora</h2>
+      <p style="color:var(--txt2);max-width:620px;margin:0 auto 26px">
+        Monte a configuração no 3D acima e clique no botão: a mensagem já vai pronta com a cor,
+        os módulos escolhidos e a informação sobre a logo. Atendemos pedidos por unidade ou por lote.
+      </p>
+      <a href="#configurador" class="btn btn-primario">Voltar ao configurador</a>
+    </div>
+  </div>
+</section>
+
+<footer class="rodape">
+  <div class="container">Guardanapeiro Modular Organizador · Peças em PLA/PETG · Produção sob encomenda</div>
+</footer>
+
+<script>
+(function () {
+  var m = document.createElement('script');
+  m.type = 'module';
+  m.src = 'js/app.js';
+  document.body.appendChild(m);
+})();
+</script>
+</body>
+</html>
