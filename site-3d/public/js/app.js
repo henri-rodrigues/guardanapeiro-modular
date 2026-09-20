@@ -205,8 +205,6 @@ function limparTemaPagina() {
 
 const luminancia = ({ r, g, b }) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
 
-const NOME_ESTILO = { gradiente: 'gradiente', faixas: 'faixas', diagonal: 'faixa diagonal' };
-
 /* ---------- logo ---------- */
 $('#input-logo').addEventListener('change', (ev) => {
   const file = ev.target.files?.[0];
@@ -233,8 +231,7 @@ $('#input-logo').addEventListener('change', (ev) => {
 
     $('#logo-nome').textContent = file.name;
     $('#logo-tema').textContent =
-      `Cores e estilo definidos pela logo: ${paraHex(estado.paleta.primaria)} + ` +
-      `${paraHex(estado.paleta.secundaria)}, arte em ${NOME_ESTILO[estado.paleta.estilo]}.`;
+      `Cores definidas pela logo: ${paraHex(estado.paleta.primaria)} + ${paraHex(estado.paleta.secundaria)}.`;
     $('#btn-remover-logo').classList.remove('hidden');
     atualizarResumo();
   };

@@ -11,7 +11,6 @@ export const paraHex = ({ r, g, b }) => `#${hx(r)}${hx(g)}${hx(b)}`;
 export const paraInt = ({ r, g, b }) =>
   (trava(Math.round(r), 0, 255) << 16) | (trava(Math.round(g), 0, 255) << 8) | trava(Math.round(b), 0, 255);
 
-const rgba = ({ r, g, b }, a) => `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${a})`;
 const lum = ({ r, g, b }) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
 
 function paraHsl({ r, g, b }) {
@@ -104,11 +103,7 @@ export function extrairPaleta(img) {
                           : deHsl(hp.h, Math.min(hp.s, 0.28), 0.86);
   const texto = logoClara ? { r: 245, g: 247, b: 250 } : { r: 22, g: 24, b: 30 };
 
-  // o estilo sai da própria logo: matiz define o desenho, saturação baixa vira faixas
-  const estilo = hp.s < 0.18 ? 'faixas'
-               : ['gradiente', 'faixas', 'diagonal'][Math.floor(hp.h / 120) % 3];
-
-  return { primaria, secundaria, base, base2, texto, logoClara, estilo };
+  return { primaria, secundaria, base, base2, texto, logoClara };
 }
 
 /** Paleta neutra usada enquanto não há logo (segue a cor escolhida da peça).
@@ -123,56 +118,41 @@ export function paletaNeutra(corProduto) {
     base: deHsl(p.h, s * 0.35, escura ? 0.12 : 0.92),
     base2: deHsl(p.h, s * 0.42, escura ? 0.20 : 0.84),
     texto: escura ? { r: 245, g: 247, b: 250 } : { r: 22, g: 24, b: 30 },
-    logoClara: escura,
-    estilo: 'gradiente'
+    logoClara: escura
   };
 }
 
 /* ---------- desenho ---------- */
+/* Visual único, limpo: fundo liso na cor da marca + cartões brancos
+   arredondados (com sombra) para a logo e para o número da mesa —
+   mesma linguagem visual do configurador (cards, sombra suave, tudo
+   bem espaçado), sem padrões chamativos por trás do conteúdo. */
 
 function pintarFundo(ctx, w, h, p) {
-  if (p.estilo === 'faixas') {
-    ctx.fillStyle = paraHex(p.base);
-    ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = rgba(p.primaria, 0.16);
-    for (let y = -h; y < h * 2; y += h * 0.16) ctx.fillRect(0, y, w, h * 0.07);
-    ctx.fillStyle = paraHex(p.primaria);
-    ctx.fillRect(0, h * 0.86, w, h * 0.06);
-    ctx.fillStyle = paraHex(p.secundaria);
-    ctx.fillRect(0, h * 0.08, w, h * 0.025);
-  } else if (p.estilo === 'diagonal') {
-    ctx.fillStyle = paraHex(p.base);
-    ctx.fillRect(0, 0, w, h);
-    ctx.save();
-    ctx.translate(w * 0.5, h * 0.5);
-    ctx.rotate(-Math.PI / 9);
-    ctx.translate(-w * 0.5, -h * 0.5);
-    const faixa = h * 0.34;
-    ctx.fillStyle = rgba(p.primaria, 0.9);
-    ctx.fillRect(-w, h * 0.62, w * 3, faixa);
-    ctx.fillStyle = rgba(p.secundaria, 0.55);
-    ctx.fillRect(-w, h * 0.62 - faixa * 0.42, w * 3, faixa * 0.3);
-    ctx.restore();
-    const g = ctx.createLinearGradient(0, 0, 0, h);
-    g.addColorStop(0, rgba(p.base, 0.9));
-    g.addColorStop(0.6, rgba(p.base, 0));
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, w, h);
-  } else {
-    const g = ctx.createLinearGradient(0, 0, w, h);
-    g.addColorStop(0, paraHex(p.base));
-    g.addColorStop(0.55, paraHex(p.base2));
-    g.addColorStop(1, paraHex(p.base));
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, w, h);
-    const bril = ctx.createRadialGradient(w * 0.24, h * 0.08, 0, w * 0.24, h * 0.08, h * 1.5);
-    bril.addColorStop(0, rgba(p.primaria, 0.34));
-    bril.addColorStop(1, rgba(p.primaria, 0));
-    ctx.fillStyle = bril;
-    ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = paraHex(p.primaria);
-    ctx.fillRect(0, h - h * 0.045, w, h * 0.045);
-  }
+  ctx.fillStyle = paraHex(p.primaria);
+  ctx.fillRect(0, 0, w, h);
+  const bril = ctx.createRadialGradient(w * 0.16, h * 0.1, 0, w * 0.16, h * 0.1, h * 1.4);
+  bril.addColorStop(0, 'rgba(255,255,255,0.16)');
+  bril.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = bril;
+  ctx.fillRect(0, 0, w, h);
+  const sombra = ctx.createLinearGradient(0, h * 0.7, 0, h);
+  sombra.addColorStop(0, 'rgba(0,0,0,0)');
+  sombra.addColorStop(1, 'rgba(0,0,0,0.16)');
+  ctx.fillStyle = sombra;
+  ctx.fillRect(0, 0, w, h);
+}
+
+function cartao(ctx, x, y, w, h, r = 28) {
+  ctx.save();
+  ctx.shadowColor = 'rgba(10,12,18,0.32)';
+  ctx.shadowBlur = 38;
+  ctx.shadowOffsetY = 16;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+  ctx.fill();
+  ctx.restore();
 }
 
 function desenharLogo(ctx, img, cx, cy, maxW, maxH) {
@@ -187,47 +167,53 @@ function novaTela(w, h) {
   return { c, ctx: c.getContext('2d') };
 }
 
-/** Arte do fundo da peça: logo + número da mesa. */
+/** Arte do fundo da peça: cartão da logo + cartão com o número da mesa. */
 export function arteFundo(img, p, mesa) {
-  const W = 1200, H = 450;
+  const W = 1600, H = 600;
   const { c, ctx } = novaTela(W, H);
   pintarFundo(ctx, W, H, p);
 
-  const corteX = W * 0.63;
+  const pad = 54, gap = 40, cardH = H - pad * 2, logoW = 460;
+  const mesaX = pad + logoW + gap, mesaW = W - pad - mesaX;
+  const interno = 52;
 
-  // bloco do número da mesa
-  ctx.fillStyle = paraHex(p.primaria);
-  ctx.fillRect(corteX, 0, W - corteX, H);
-  const alvo = lum(p.primaria) > 0.62 ? { r: 20, g: 22, b: 28 } : { r: 255, g: 255, b: 255 };
-  ctx.fillStyle = paraHex(alvo);
-  ctx.textAlign = 'center';
-  ctx.font = '600 44px Inter, system-ui, Arial, sans-serif';
-  ctx.globalAlpha = 0.72;
-  ctx.fillText('MESA', corteX + (W - corteX) / 2, H * 0.31);
-  ctx.globalAlpha = 1;
-  ctx.font = '800 210px Inter, system-ui, Arial, sans-serif';
-  ctx.fillText(String(mesa).padStart(2, '0'), corteX + (W - corteX) / 2, H * 0.83);
-
-  // logo (ou marca de água textual, quando ainda não há logo)
+  // cartão da logo
+  cartao(ctx, pad, pad, logoW, cardH);
   if (img) {
-    desenharLogo(ctx, img, corteX * 0.5, H * 0.47, corteX * 0.74, H * 0.6);
+    desenharLogo(ctx, img, pad + logoW / 2, pad + cardH / 2, logoW - interno * 2, cardH - interno * 2);
   } else {
-    ctx.fillStyle = rgba(p.texto, 0.5);
-    ctx.font = '700 52px Inter, system-ui, Arial, sans-serif';
-    ctx.fillText('SUA LOGO AQUI', corteX * 0.5, H * 0.54);
+    ctx.strokeStyle = 'rgba(20,22,28,0.28)'; ctx.lineWidth = 3; ctx.setLineDash([14, 12]);
+    ctx.strokeRect(pad + 22, pad + 22, logoW - 44, cardH - 44); ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(20,22,28,0.45)';
+    ctx.textAlign = 'center'; ctx.font = '700 40px Inter, system-ui, Arial, sans-serif';
+    ctx.fillText('SUA LOGO', pad + logoW / 2, pad + cardH / 2 - 10);
+    ctx.fillText('AQUI', pad + logoW / 2, pad + cardH / 2 + 46);
   }
+
+  // cartão da mesa
+  cartao(ctx, mesaX, pad, mesaW, cardH);
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#3c414c';
+  ctx.font = '700 78px Inter, system-ui, Arial, sans-serif';
+  ctx.fillText('Mesa', mesaX + interno, pad + interno + 62);
+  ctx.fillStyle = '#15171d';
+  ctx.font = '800 214px Inter, system-ui, Arial, sans-serif';
+  ctx.fillText(String(mesa).padStart(2, '0'), mesaX + interno - 6, pad + cardH - 54);
+
   return c;
 }
 
-/** Arte da frente da peça: faixa com a logo. */
+/** Arte da frente da peça: cartão branco com a logo, sobre a cor da marca. */
 export function arteFrente(img, p) {
   if (!img) return null;
-  const W = 1200, H = 255;
+  const W = 1600, H = 340;
   const { c, ctx } = novaTela(W, H);
   pintarFundo(ctx, W, H, p);
-  ctx.fillStyle = paraHex(p.secundaria);
-  ctx.fillRect(0, 0, W * 0.012, H);
-  ctx.fillRect(W - W * 0.012, 0, W * 0.012, H);
-  desenharLogo(ctx, img, W / 2, H * 0.47, W * 0.56, H * 0.62);
+  const pad = 36, interno = 26;
+  const altLogo = H - pad * 2 - interno * 2;
+  const largLogo = Math.min(altLogo * (img.width / img.height), W * 0.7);
+  const cw = largLogo + interno * 2, ch = H - pad * 2;
+  cartao(ctx, (W - cw) / 2, pad, cw, ch, 24);
+  desenharLogo(ctx, img, W / 2, H / 2, largLogo, altLogo);
   return c;
 }
